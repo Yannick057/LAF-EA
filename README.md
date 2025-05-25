@@ -52,7 +52,7 @@ Application mobile interne pour la saisie, la gestion et l’exportation des chi
 ## 📧 Support
 
 Pour toute question, contact :  
-**fabrice.georges@sncf.fr**
+**yannick.uhrig@gmail.com**
 
 ---
 
