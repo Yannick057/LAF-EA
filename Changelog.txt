@@ -1,0 +1,74 @@
+# 🚄 LAF EA Metz – Historique des versions
+
+---
+
+## [1.1.6] – 2025-05-25
+- Changement de couleur : section « Personnes contrôlées » en vert d’eau (plus lisible et moderne).
+- Le compteur des personnes contrôlées est désormais centré et mieux mis en valeur.
+- Section « Commentaire » : fond gris très clair, label bleu foncé (plus professionnel).
+- Section « RI » : fond bleu très clair et titre bleu pour plus de cohérence visuelle.
+- Correction du reset automatique des champs après enregistrement.
+- Plusieurs ajustements visuels pour une interface plus sobre, claire et agréable sur mobile.
+
+---
+
+## [1.1.5] – 2025-05-25
+- Suppression du bouton "Partager (texte)".
+- Export PDF et HTML bien visibles, boutons colorés et UI modernisée.
+- Export texte accessible facilement via le bouton principal.
+- Interface d’export plus claire : moins de boutons inutiles, meilleure expérience utilisateur.
+- Corrections mineures, stabilité.
+
+---
+
+## [1.1.4] – 2024-05-xx
+- Ajout du bouton “Exporter et envoyer (texte)” (partage universel, ouverture dans toutes les apps compatibles).
+- Ajout de l’export PDF et HTML, avec photo du train dans le détail.
+- Export par e-mail avec corps pré-rempli, choix direct du destinataire.
+- Option de choisir et d’exporter plusieurs trains, groupés par jour.
+- Ajout de couleurs et d’arrondis aux boutons pour une meilleure lisibilité.
+- Correction de divers bugs d’affichage.
+- Prise en charge des noms de fichiers au format JJMMAAAA.
+
+---
+
+## [1.1.3] – 2024-05-xx
+- Export texte enrichi : ajout du taux de fraude, nombre de billets contrôle, nombre de PV et cases RI.
+- Sélection de jours et de trains facilitée (liste interactive).
+- Bouton d’export PDF intégré.
+- Ajout de l’export HTML.
+- Corrections de stabilité.
+
+---
+
+## [1.1.2] – 2024-05-xx
+- Export texte par mail possible pour une ou plusieurs journées.
+- Prise en compte des commentaires et photos dans l’export.
+- Amélioration du style de la liste historique.
+
+---
+
+## [1.1.1] – 2024-05-xx
+- Ajout de la photo du train dans la fiche historique et l’export.
+- Possibilité de filtrer ou de modifier les entrées dans l’historique.
+- Corrections mineures.
+
+---
+
+## [1.1.0] – 2024-05-xx
+- Version majeure : création de l’application
+- Saisie des données train, billets, PV, contrôles, taux de fraude, etc.
+- Historique complet par jour.
+- Export CSV/TXT.
+- Interface claire et intuitive, mode sombre.
+
+---
+
+> **Format des versions :**
+> - 1er chiffre : version majeure (fonctionnalité-clé)
+> - 2e chiffre : évolution importante ou nouvelle page
+> - 3e chiffre : corrections ou petits ajouts
+
+---
+
+**Merci d’utiliser LAF EA Metz !**
