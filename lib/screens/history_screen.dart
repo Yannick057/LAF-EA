@@ -1,3 +1,4 @@
+// ... (imports identiques)
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../utils/grouping.dart';
@@ -45,18 +46,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
     buffer.writeln('Heure de départ : ${entry['departureTime']}');
     if (entry['controlledPeople'] != null && entry['controlledPeople'] > 0) {
       buffer.writeln('Personnes contrôlées : ${entry['controlledPeople']}');
+
+      // Récupération des compteurs
+      final int pvStt100 = entry['pvStt100'] ?? 0;
+      final int controleStt50 = entry['controleStt50'] ?? 0;
+
       int pvCount = (entry['pvs'] as List?)?.length ?? 0;
       int controleCount = (entry['controles'] as List?)?.length ?? 0;
-      double taux = entry['controlledPeople'] == 0 ? 0 : ((pvCount + controleCount) / entry['controlledPeople']) * 100;
+      // On ajoute les compteurs
+      double taux = entry['controlledPeople'] == 0 ? 0 : ((pvCount + pvStt100 + controleCount + controleStt50) / entry['controlledPeople']) * 100;
       buffer.writeln('Taux de fraude : ${taux.toStringAsFixed(1)}%');
     }
-    final List tickets = entry['tickets'] ?? [];
-    if (tickets.isNotEmpty) {
-      buffer.writeln('Billets : ${tickets.length}');
-      for (var t in tickets) {
-        buffer.writeln('- ${t['type']}: ${t['amount']} €');
-      }
-    }
+
+    final int controleStt50 = entry['controleStt50'] ?? 0;
+    final int pvStt100 = entry['pvStt100'] ?? 0;
+
+    if (controleStt50 > 0) buffer.writeln('Contrôles STT 50 € : $controleStt50');
     final List controles = entry['controles'] ?? [];
     if (controles.isNotEmpty) {
       buffer.writeln('Billets contrôle : ${controles.length}');
@@ -64,11 +69,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
         buffer.writeln('- ${c['type']}: ${c['amount']} €');
       }
     }
+    if (pvStt100 > 0) buffer.writeln('PV STT 100 € : $pvStt100');
     final List pvs = entry['pvs'] ?? [];
     if (pvs.isNotEmpty) {
       buffer.writeln('PV : ${pvs.length}');
       for (var pv in pvs) {
         buffer.writeln('- ${pv['type']}: ${pv['amount']} €');
+      }
+    }
+    final List tickets = entry['tickets'] ?? [];
+    if (tickets.isNotEmpty) {
+      buffer.writeln('Billets : ${tickets.length}');
+      for (var t in tickets) {
+        buffer.writeln('- ${t['type']}: ${t['amount']} €');
       }
     }
     if ((entry['riPositif'] ?? false) || (entry['riNegatif'] ?? false)) {
@@ -117,11 +130,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ...grouped[day]!.map((entry) {
                       final idx = items.indexOf(entry);
 
-                      // Calcul du taux de fraude
+                      // Calcul du taux de fraude avec les nouveaux compteurs
+                      final int pvStt100 = entry['pvStt100'] ?? 0;
+                      final int controleStt50 = entry['controleStt50'] ?? 0;
                       final int pvCount = (entry['pvs'] as List?)?.length ?? 0;
                       final int controleCount = (entry['controles'] as List?)?.length ?? 0;
                       final int nbControlled = entry['controlledPeople'] ?? 0;
-                      final double tauxFraude = nbControlled == 0 ? 0 : ((pvCount + controleCount) / nbControlled) * 100;
+                      final double tauxFraude = nbControlled == 0
+                          ? 0
+                          : ((pvCount + pvStt100 + controleCount + controleStt50) / nbControlled) * 100;
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -182,10 +199,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                               overflow: TextOverflow.ellipsis,
                             ),
-                            subtitle: Text(
-                              (entry['timestamp']?.toString().substring(11, 16) ?? '') +
-                                  (entry['controlledPeople'] != null ? ' — ${entry['controlledPeople']} contrôlés' : ''),
-                              style: const TextStyle(fontSize: 13),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  (entry['timestamp']?.toString().substring(11, 16) ?? '') +
+                                      (entry['controlledPeople'] != null ? ' — ${entry['controlledPeople']} contrôlés' : ''),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                // Ajout des compteurs visibles directement
+                                if ((entry['controleStt50'] ?? 0) > 0)
+                                  Text('Contrôles STT 50€ : ${entry['controleStt50']}', style: const TextStyle(color: Colors.deepPurple)),
+                                if ((entry['pvStt100'] ?? 0) > 0)
+                                  Text('PV STT 100€ : ${entry['pvStt100']}', style: const TextStyle(color: Colors.red)),
+                                Text('Taux de fraude : ${tauxFraude.toStringAsFixed(1)}%',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: getFraudColor(tauxFraude))),
+                              ],
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -273,7 +304,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ]
               ],
             ),
-            // Bouton d'export en bas si sélection active
             if (selectedIndexes.isNotEmpty)
               Positioned(
                 bottom: 24,

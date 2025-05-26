@@ -34,6 +34,10 @@ class _LAFFormState extends State<LAFForm> {
   List<Map<String, TextEditingController>> controleControllers = [];
   List<Map<String, TextEditingController>> pvControllers = [];
 
+  // Compteurs STT fixes
+  int controleStt50 = 0;
+  int pvStt100 = 0;
+
   final List<String> ticketTypes = ['Bord', 'Exceptionnel'];
   final List<String> controleTypes = ['STT', 'RNV', 'Titre tiers', 'D naissance', 'Autre'];
   final List<String> pvTypes = ['STT', 'RNV', 'Titre tiers', 'D naissance', 'Autre'];
@@ -93,9 +97,20 @@ class _LAFFormState extends State<LAFForm> {
     });
   }
 
+  // Compteurs STT
+  void _incrementControleStt50() => setState(() => controleStt50++);
+  void _decrementControleStt50() => setState(() {
+    if (controleStt50 > 0) controleStt50--;
+  });
+
+  void _incrementPvStt100() => setState(() => pvStt100++);
+  void _decrementPvStt100() => setState(() {
+    if (pvStt100 > 0) pvStt100--;
+  });
+
   double _computeTauxFraude() {
-    final pvCount = pvControllers.where((ctrl) => ctrl['amount']!.text.trim().isNotEmpty).length;
-    final controleCount = controleControllers.where((ctrl) => ctrl['amount']!.text.trim().isNotEmpty).length;
+    final pvCount = pvControllers.where((ctrl) => ctrl['amount']!.text.trim().isNotEmpty).length + pvStt100;
+    final controleCount = controleControllers.where((ctrl) => ctrl['amount']!.text.trim().isNotEmpty).length + controleStt50;
     if (controlledPeople == 0) return 0.0;
     return ((pvCount + controleCount) / controlledPeople) * 100;
   }
@@ -121,19 +136,31 @@ class _LAFFormState extends State<LAFForm> {
         .map((ctrl) => {
       'type': ctrl['type']!.text,
       'amount': ctrl['amount']!.text,
-    }).toList();
-    final controles = controleControllers
-        .where((ctrl) => ctrl['amount']!.text.trim().isNotEmpty)
-        .map((ctrl) => {
-      'type': ctrl['type']!.text,
-      'amount': ctrl['amount']!.text,
-    }).toList();
-    final pvs = pvControllers
-        .where((ctrl) => ctrl['amount']!.text.trim().isNotEmpty)
-        .map((ctrl) => {
-      'type': ctrl['type']!.text,
-      'amount': ctrl['amount']!.text,
-    }).toList();
+    })
+        .toList();
+
+    final controles = [
+      ...List.generate(
+          controleStt50, (_) => {'type': 'STT', 'amount': '50'}),
+      ...controleControllers
+          .where((ctrl) => ctrl['amount']!.text.trim().isNotEmpty)
+          .map((ctrl) => {
+        'type': ctrl['type']!.text,
+        'amount': ctrl['amount']!.text,
+      })
+          .toList(),
+    ];
+
+    final pvs = [
+      ...List.generate(pvStt100, (_) => {'type': 'STT', 'amount': '100'}),
+      ...pvControllers
+          .where((ctrl) => ctrl['amount']!.text.trim().isNotEmpty)
+          .map((ctrl) => {
+        'type': ctrl['type']!.text,
+        'amount': ctrl['amount']!.text,
+      })
+          .toList(),
+    ];
 
     final data = {
       'trainNumber': trainNumberController.text,
@@ -166,6 +193,8 @@ class _LAFFormState extends State<LAFForm> {
     ticketControllers.clear();
     controleControllers.clear();
     pvControllers.clear();
+    controleStt50 = 0;
+    pvStt100 = 0;
     photoPath = null;
     _addTicket();
     _addControle();
@@ -304,7 +333,7 @@ class _LAFFormState extends State<LAFForm> {
           // --- PERSONNES CONTRÔLÉES ---
           Card(
             elevation: 6,
-            color: Colors.teal[50], // Vert d’eau très doux
+            color: Colors.teal[50],
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             margin: cardMargin,
             child: Padding(
@@ -358,7 +387,7 @@ class _LAFFormState extends State<LAFForm> {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Colors.teal, // Taux de fraude en teal
+                          color: Colors.teal,
                         ),
                       ),
                     ),
@@ -379,9 +408,35 @@ class _LAFFormState extends State<LAFForm> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Billets contrôle (${controleControllers.length})',
+                    'Billets contrôle (${controleControllers.length + controleStt50})',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.deepPurple),
                   ),
+                  // ----------- Bloc compteur 50€ -----------
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('STT 50 €', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: _decrementControleStt50,
+                            color: Colors.deepPurple,
+                          ),
+                          Text(
+                            '$controleStt50',
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            onPressed: _incrementControleStt50,
+                            color: Colors.deepPurple,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
                   for (int i = 0; i < controleControllers.length; i++)
                     Row(
                       children: [
@@ -448,9 +503,35 @@ class _LAFFormState extends State<LAFForm> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'PV (${pvControllers.length})',
+                    'PV (${pvControllers.length + pvStt100})',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.red),
                   ),
+                  // ----------- Bloc compteur 100€ -----------
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('STT 100 €', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: _decrementPvStt100,
+                            color: Colors.red,
+                          ),
+                          Text(
+                            '$pvStt100',
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            onPressed: _incrementPvStt100,
+                            color: Colors.red,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
                   for (int i = 0; i < pvControllers.length; i++)
                     Row(
                       children: [
@@ -570,7 +651,7 @@ class _LAFFormState extends State<LAFForm> {
           // --- RI ---
           Card(
             elevation: 2,
-            color: Colors.blue[50], // Bleu très clair
+            color: Colors.blue[50],
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             margin: cardMargin,
             child: Padding(
@@ -581,7 +662,7 @@ class _LAFFormState extends State<LAFForm> {
                     'RI',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue, // Titre bleu foncé
+                      color: Colors.blue,
                       fontSize: 16,
                     ),
                   ),
@@ -604,7 +685,7 @@ class _LAFFormState extends State<LAFForm> {
           // --- Commentaire ---
           Card(
             elevation: 2,
-            color: Colors.grey[100], // Gris très clair, neutre
+            color: Colors.grey[100],
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             margin: cardMargin,
             child: Padding(
@@ -614,7 +695,7 @@ class _LAFFormState extends State<LAFForm> {
                 maxLines: 2,
                 decoration: const InputDecoration(
                   labelText: 'Commentaire',
-                  labelStyle: TextStyle(color: Colors.blue), // Label bleu foncé
+                  labelStyle: TextStyle(color: Colors.blue),
                 ),
               ),
             ),

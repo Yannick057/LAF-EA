@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'form_screen.dart';
 import 'history_screen.dart';
-import 'settings_screen.dart'; // <-- Ajout
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback onToggleTheme;
@@ -29,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _loadVersion();
   }
 
-  // Charge la version de l'application (pour l'afficher dans la barre du haut)
   Future<void> _loadVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
@@ -65,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             onPressed: widget.onToggleTheme,
             tooltip: "Changer de thème",
           ),
-          // ------- AJOUT bouton paramètres -------
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: "Paramètres",
@@ -76,10 +74,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               );
             },
           ),
-          // ------- FIN AJOUT -------
         ],
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.blueAccent,              // Texte de l'onglet sélectionné
+          unselectedLabelColor: Colors.grey[800],     // Texte des autres onglets
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            letterSpacing: 0.5,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.normal,
+            fontSize: 15,
+          ),
+          indicatorColor: Colors.blueAccent,
+          indicatorWeight: 3,
+          indicatorSize: TabBarIndicatorSize.label,
           tabs: const [
             Tab(text: 'Formulaire'),
             Tab(text: 'Historique'),

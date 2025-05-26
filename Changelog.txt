@@ -1,5 +1,14 @@
 # 🚄 LAF EA Metz – Historique des versions
 
+
+## [1.1.7] – 2025-05-26
+- Ajout d'un compteur "Contrôles STT 50 €" (à droite du texte, incrémentable rapidement).
+- Ajout d'un compteur "PV STT 100 €" (même principe).
+- Les contrôles et PV restent personnalisables via le menu déroulant comme avant.
+- Amélioration de l'UI : couleurs plus douces, texte à gauche/compteur à droite.
+- Correction : les sections ne démarrent plus à 1 par défaut.
+- Nettoyage de code et meilleure ergonomie générale.
+
 ---
 
 ## [1.1.6] – 2025-05-25

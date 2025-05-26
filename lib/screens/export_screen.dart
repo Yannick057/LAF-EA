@@ -454,10 +454,10 @@ class _ExportHistoryScreenState extends State<ExportHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final exportList = getExportList();
+    // Gestion du multi-sélection
     return Scaffold(
       appBar: AppBar(title: const Text('Exporter/Mailer Historique')),
-      body: hasDirectSelection
+      body: widget.items.length < 10
           ? ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -466,7 +466,7 @@ class _ExportHistoryScreenState extends State<ExportHistoryScreen> {
             icon: const Icon(Icons.share),
             label: const Text('Exporter et envoyer (texte)'),
             onPressed: () async {
-              await exportTextWith(exportList);
+              await exportTextWith(widget.items);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurple,
@@ -486,7 +486,7 @@ class _ExportHistoryScreenState extends State<ExportHistoryScreen> {
                   duration: Duration(seconds: 3),
                 ),
               );
-              await exportPDFWith(exportList);
+              await exportPDFWith(widget.items);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[700],
@@ -506,7 +506,7 @@ class _ExportHistoryScreenState extends State<ExportHistoryScreen> {
                   duration: Duration(seconds: 3),
                 ),
               );
-              await sendMailWithHtml(exportList);
+              await sendMailWithHtml(widget.items);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange[700],
@@ -518,12 +518,118 @@ class _ExportHistoryScreenState extends State<ExportHistoryScreen> {
         ],
       )
           : ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           const Padding(
-            padding: EdgeInsets.all(8),
-            child: Text("Sélectionnez les jours OU les trains à exporter :", style: TextStyle(fontWeight: FontWeight.bold)),
+            padding: EdgeInsets.only(bottom: 10),
+            child: Text(
+              "Sélectionnez les jours OU les trains à exporter :",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
-          // ... (ta logique de sélection si besoin) ...
+          for (final day in grouped.keys) ...[
+            CheckboxListTile(
+              value: selectedDays[day]!,
+              title: Text(
+                formatDateFr(day),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+              ),
+              controlAffinity: ListTileControlAffinity.leading,
+              onChanged: (checked) {
+                setState(() {
+                  selectedDays[day] = checked ?? false;
+                  // Sélectionner/désélectionner tous les trains de ce jour
+                  for (final entry in grouped[day]!) {
+                    selectedTrains[entry] = checked ?? false;
+                  }
+                });
+              },
+            ),
+            if (!selectedDays[day]!)
+              Padding(
+                padding: const EdgeInsets.only(left: 28),
+                child: Column(
+                  children: [
+                    for (final entry in grouped[day]!) CheckboxListTile(
+                      value: selectedTrains[entry]!,
+                      title: Text(
+                        'Train ${entry['trainNumber']} - ${entry['origin']} > ${entry['destination']}',
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      onChanged: (checked) {
+                        setState(() {
+                          selectedTrains[entry] = checked ?? false;
+                          // Si tous les trains du jour sont sélectionnés, cocher le jour
+                          if (grouped[day]!.every((e) => selectedTrains[e]!)) {
+                            selectedDays[day] = true;
+                          } else {
+                            selectedDays[day] = false;
+                          }
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          ],
+          const SizedBox(height: 30),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.share),
+            label: const Text('Exporter et envoyer (texte)'),
+            onPressed: () async {
+              final toExport = getSelectedEntries();
+              if (toExport.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Aucune saisie sélectionnée")));
+                return;
+              }
+              await exportTextWith(toExport);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.email_outlined),
+            label: const Text('Partager (PDF)'),
+            onPressed: () async {
+              final toExport = getSelectedEntries();
+              if (toExport.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Aucune saisie sélectionnée")));
+                return;
+              }
+              await exportPDFWith(toExport);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.email_outlined),
+            label: const Text('Partager (HTML)'),
+            onPressed: () async {
+              final toExport = getSelectedEntries();
+              if (toExport.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Aucune saisie sélectionnée")));
+                return;
+              }
+              await sendMailWithHtml(toExport);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[700],
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+            ),
+          ),
+          const SizedBox(height: 40),
         ],
       ),
     );
